@@ -1,12 +1,25 @@
 <template>
   <div class="pollen_amount">
     <div class="notion">
-      <el-text v-if="ssr_data_success" class="text" type="primary" size="large"
-        >请输入您的种子园遗传距离数据以及尺寸数据
-      </el-text>
-      <el-text v-else class="text" type="primary" size="large"
-        >请输入您的种子园花粉量数据
-      </el-text>
+      <transition name="tip">
+        <el-text
+          v-if="ssr_data_success"
+          class="text"
+          type="primary"
+          size="large"
+          >请输入您的种子园遗传距离数据以及尺寸数据
+        </el-text>
+        <el-text
+          v-else-if="pollen_amount_success"
+          class="text"
+          type="primary"
+          size="large"
+          >请选择算法
+        </el-text>
+        <el-text v-else class="text" type="primary" size="large"
+          >请输入您的种子园花粉量数据
+        </el-text>
+      </transition>
     </div>
     <!--    遗传距离文件上传-->
     <div class="data-upload">
@@ -50,32 +63,54 @@
         :show-file-list="false"
       >
         <template v-slot:trigger>
-          <el-button type="primary" class="file">上传花粉量文件</el-button>
+          <el-button v-show="!ssr_data_success" type="primary" class="file"
+            >上传花粉量文件</el-button
+          >
         </template>
       </el-upload>
+      <el-button
+        v-show="pollen_amount_success"
+        type="primary"
+        class="algorithm_choosing"
+        >遗传算法</el-button
+      >
+      <el-button
+        v-show="pollen_amount_success"
+        type="primary"
+        class="algorithm_choosing"
+        >粒子群算法</el-button
+      >
     </div>
   </div>
 </template>
 
 <script lang="ts" name="Pollen_amount" setup>
-import { ref } from "vue";
+import { onBeforeUnmount, ref } from "vue";
 import { ElMessage, UploadFile } from "element-plus";
 import axios from "axios";
 // 跟踪遗传距离文件、尺寸数据、花粉量文件上传状态
 const status = {
   file: false,
-  dimension: false,
-  pollen_amount: false
+  dimension: false
 };
 
+// 判断ssr文件以及尺寸数据上传是否成功
 let ssr_data_success = ref(true);
+// 判断花粉量文件上传是否成功
+let pollen_amount_success = ref(false);
 
 // 种子园的横向及纵向树木数
 const width = ref<number | null>(null);
 const height = ref<number | null>(null);
 
+// 控制handleSsrFileChange执行一次
+let isHandleSsrFileChange = ref(false);
+
 // ssr文件验证正确并上传之后输出文件名字
 const handleSsrFileChange = async (uploadFile: any) => {
+  if (isHandleSsrFileChange.value) return;
+  isHandleSsrFileChange.value = true;
+
   const file = uploadFile.raw; // 直接获取 File 对象
   if (file) {
     console.log("文件名字是：", file.name);
@@ -89,17 +124,26 @@ const handleSsrFileChange = async (uploadFile: any) => {
           "Content-Type": "multipart/form-data"
         }
       });
+      ElMessage.success("遗传距离文件上传成功");
       status.file = true;
       checkUpload();
       console.log(response.data);
     } catch (error) {
       console.log(error);
+    } finally {
+      isHandleSsrFileChange.value = false;
     }
+  } else {
+    isHandleSsrFileChange.value = false;
   }
 };
 
 // 在这里添加ssr文件格式验证
 const beforeSsrUpload = (file: File) => {
+  if (isHandleSsrFileChange.value) {
+    // ElMessage.warning("文件上传正在进行中，请稍等");
+    return false; // 阻止上传
+  }
   const isSSR = file.name.endsWith(".xlsx") || file.name.endsWith(".csv");
   if (!isSSR) {
     ElMessage.error("上传文件格式不正确，请选择SSR文件");
@@ -145,10 +189,9 @@ const checkUpload = async () => {
       const response = await axios.get("/api/data_judge");
       if (response.data.result === true) {
         console.log("Data is valid:", response.data);
-        ssr_data_success.value = true;
+        ssr_data_success.value = false;
       } else {
         console.log("Data is not valid:", response.data);
-        ssr_data_success.value = false;
       }
     } catch (error) {
       console.error("Error while checking data:", error);
@@ -157,8 +200,14 @@ const checkUpload = async () => {
   }
 };
 
+// 控制handlePollenAmountFileChange执行一次
+let isHandlePollenAmountFileChange = ref(false);
 // 上传花粉量文件之前的验证
 const beforePollenAmountUpload = (file: File) => {
+  if (isHandlePollenAmountFileChange.value) {
+    // 文件上传时阻止相同数据再次上传
+    return false;
+  }
   const isPollenAmount =
     file.name.endsWith(".xlsx") || file.name.endsWith(".csv");
   if (!isPollenAmount) {
@@ -167,30 +216,47 @@ const beforePollenAmountUpload = (file: File) => {
   return isPollenAmount;
 };
 
+// 花粉量文件验证之后
 const handlePollenAmountFileChange = async (uploadFile: any) => {
+  if (isHandlePollenAmountFileChange.value) return;
+  isHandlePollenAmountFileChange.value = true;
+
   const file = uploadFile.raw;
   if (file) {
     console.log("文件名字是：", file.name);
-  }
 
-  const formData = new FormData();
-  formData.append("file", file);
+    // 借用formData传递数据，创建键值对
+    const formData = new FormData();
+    formData.append("file", file);
 
-  try {
-    const response = await axios.post(
-      "/api/pollen_amount_file_parse",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data"
+    try {
+      const response = await axios.post(
+        "/api/pollen_amount_file_parse",
+        // 上传的formData，并指定上传格式
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
         }
-      }
-    );
-    console.log(response.data);
-  } catch (error) {
-    console.log(error);
+      );
+      // 上传之后将上传成功的标志置true
+      pollen_amount_success.value = true;
+      ElMessage.success("上传花粉量文件成功");
+      console.log(response.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      isHandlePollenAmountFileChange.value = false;
+    }
+  } else {
+    isHandlePollenAmountFileChange.value = false;
   }
 };
+
+onBeforeUnmount(() => {
+  alert("退出此界面数据将全部丢失");
+});
 </script>
 
 <style scoped>
@@ -226,5 +292,27 @@ const handlePollenAmountFileChange = async (uploadFile: any) => {
   gap: 16px;
   align-items: center;
   padding: 20px;
+}
+
+.algorithm_choosing {
+  margin-left: 20px;
+}
+
+.transition-container {
+  position: relative; /* 确保子元素绝对定位相对于此 */
+  height: 100px; /* 根据内容调整高度 */
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter,
+.fade-leave-to {
+  position: absolute; /* 绝对定位以保持重叠 */
+  top: 0;
+  left: 0;
+  opacity: 0; /* 进入和离开时透明度为 0 */
 }
 </style>
