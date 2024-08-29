@@ -2,7 +2,8 @@
 export default {
   path: "/algorithms",
   meta: {
-    title: "优化算法"
+    title: "优化算法",
+    rank: 2
   },
   children: [
     {

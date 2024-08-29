@@ -1,7 +1,8 @@
 export default {
   path: "/design_patterns",
   meta: {
-    title: "设计模式"
+    title: "设计模式",
+    rank: 1
   },
   children: [
     {
@@ -9,7 +10,7 @@ export default {
       name: "Design_patterns",
       component: () => import("@/views/design_patterns/index.vue"),
       meta: {
-        title: "首页"
+        title: "模式选择"
       }
     },
     {
@@ -26,6 +27,14 @@ export default {
       component: () => import("@/views/design_patterns/pollen_amount.vue"),
       meta: {
         title: "花粉量"
+      }
+    },
+    {
+      path: "/design_patterns/entire_pattern",
+      name: "Entire_pattern",
+      component: () => import("@/views/design_patterns/entire_pattern.vue"),
+      meta: {
+        title: "综合设计"
       }
     }
   ]
