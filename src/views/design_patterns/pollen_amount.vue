@@ -28,8 +28,8 @@
       <el-upload
         class="ssr_file_upload"
         action="/api/ssr_file_parse"
-        :on-change="handleSsrFileUpload"
         :before-upload="beforeSsrUpload"
+        :on-change="handleSsrFileUpload"
         :show-file-list="false"
       >
         <el-button type="primary" class="file">上传遗传距离文件</el-button>
@@ -59,7 +59,7 @@
       <el-upload
         class="pollen_amount_file_upload"
         action="/api/pollen_amount_file_parse"
-        :on-change="handlePollenAmountFileUpload"
+        :on-sucess="handlePollenAmountFileUpload"
         :before-upload="beforePollenAmountUpload"
         :show-file-list="false"
       >
@@ -69,6 +69,7 @@
           >
         </template>
       </el-upload>
+
       <el-button
         v-show="pollen_amount_success"
         type="primary"
@@ -110,8 +111,24 @@ const length = ref<number | null>(null);
 // 控制handleSsrFileChange执行一次
 let isHandleSsrFileUpload = ref(false);
 
+// 在这里添加ssr文件格式验证
+const beforeSsrUpload = (file: File) => {
+  // 若是正在上传就阻止其再次上传
+  if (isHandleSsrFileUpload.value) {
+    ElMessage.warning("文件正在上传中，请稍等");
+    return false;
+  }
+  const isSSR = file.name.endsWith(".xlsx") || file.name.endsWith(".csv");
+  if (!isSSR) {
+    ElMessage.error("上传文件格式不正确，请选择xlsx或csv格式文件");
+    return false;
+  }
+  return true;
+};
+
 // ssr文件验证正确并上传之后输出文件名字
 const handleSsrFileUpload = async (uploadFile: any) => {
+  console.log("调用handleSsrFileUpload");
   if (isHandleSsrFileUpload.value) return;
   isHandleSsrFileUpload.value = true;
 
@@ -148,21 +165,6 @@ const handleSsrFileUpload = async (uploadFile: any) => {
   } else {
     isHandleSsrFileUpload.value = false;
   }
-};
-
-// 在这里添加ssr文件格式验证
-const beforeSsrUpload = (file: File) => {
-  // 若是正在上传就阻止其再次上传
-  if (isHandleSsrFileUpload.value) {
-    ElMessage.warning("文件正在上传中，请稍等");
-    return false;
-  }
-  const isSSR = file.name.endsWith(".xlsx") || file.name.endsWith(".csv");
-  if (!isSSR) {
-    ElMessage.error("上传文件格式不正确，请选择xlsx或csv格式文件");
-  }
-
-  return isSSR;
 };
 
 // 验证width以及height数据的正确以及传到后端

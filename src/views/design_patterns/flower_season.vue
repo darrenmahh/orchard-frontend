@@ -61,6 +61,21 @@
           >
         </template>
       </el-upload>
+
+      <el-button
+        v-show="flower_season_ok"
+        type="primary"
+        class="algorithm_choosing"
+        @click="navigateTo('Ga')"
+        >遗传算法</el-button
+      >
+      <el-button
+        v-show="flower_season_ok"
+        type="primary"
+        class="algorithm_choosing"
+        @click="navigateTo('Pso')"
+        >粒子群算法</el-button
+      >
     </div>
   </div>
 </template>
@@ -69,6 +84,7 @@
 import { ref } from "vue";
 import { ElMessage } from "element-plus";
 import axios from "axios";
+import { useRouter } from "vue-router";
 
 // 跟踪文件以及尺寸上传状态
 const status = {
@@ -94,14 +110,15 @@ const beforeSsrUpload = (file: File) => {
   const isSSR = file.name.endsWith(".xlsx") || file.name.endsWith(".csv");
   if (!isSSR) {
     ElMessage.error("上传文件格式不正确，请选择xlsx或csv格式文件");
+    return false;
   }
-
-  return isSSR;
+  return true;
 };
 
 // 控制上传相同文件时只执行一次函数
 let isHandleSsrFileUpload = ref(false);
 const handleSsrFileUpload = async (uploadFile: any) => {
+  console.log("调用handleSsrFileUpload");
   if (isHandleSsrFileUpload.value) return;
   isHandleSsrFileUpload.value = true;
 
@@ -119,7 +136,7 @@ const handleSsrFileUpload = async (uploadFile: any) => {
       });
 
       const result = await response.json(); // 解析 JSON 响应
-
+      console.log("花期handleSsrFileUpload函数返回的result：", result);
       if (response.ok) {
         status.file = true;
         if (status.dimension) {
@@ -184,10 +201,10 @@ const checkUpload = async () => {
   }
 };
 
-// 控制花期上传只执行一次
+// 控制花期数据上传只执行一次
 let isHandleFlowerSeasonFileUpload = ref(false);
 const beforeFlowerSeasonFileUpload = (file: File) => {
-  console.log("beforeFlowerSeasonFileUpload");
+  // 若是正在上传就阻止再次上传相同文件
   if (isHandleFlowerSeasonFileUpload.value) {
     return false;
   }
@@ -195,12 +212,20 @@ const beforeFlowerSeasonFileUpload = (file: File) => {
     file.name.endsWith(".xlsx") || file.name.endsWith(".csv");
   if (!isFlowerSeason) {
     ElMessage.error("上传的花期数据不正确，请上传正确文件");
+    return false;
   }
-  return isFlowerSeason;
+  return true;
 };
 
 const handleFlowerSeasonFileUpload = () => {
   console.log("handleFlowerSeasonFileChange");
+};
+
+const router = useRouter();
+let isNavigateTo = ref(false);
+const navigateTo = (routeName: string) => {
+  isNavigateTo.value = true;
+  router.push({ name: routeName });
 };
 </script>
 
