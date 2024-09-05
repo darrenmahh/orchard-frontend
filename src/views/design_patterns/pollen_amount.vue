@@ -21,13 +21,14 @@
         </el-text>
       </transition>
     </div>
-    <!--    遗传距离文件上传-->
+
+    <!--  遗传距离文件上传  -->
     <div class="data-upload">
       <!--  上传的是包含文件信息的对象  -->
       <el-upload
         class="ssr_file_upload"
         action="/api/ssr_file_parse"
-        :on-change="handleSsrFileChange"
+        :on-change="handleSsrFileUpload"
         :before-upload="beforeSsrUpload"
         :show-file-list="false"
       >
@@ -43,10 +44,10 @@
       />
 
       <el-input-number
-        v-model="height"
+        v-model="length"
         :min="1"
         placeholder="种子园纵向树木数"
-        label="高度"
+        label="长度"
         class="size-input"
       />
 
@@ -58,7 +59,7 @@
       <el-upload
         class="pollen_amount_file_upload"
         action="/api/pollen_amount_file_parse"
-        :on-change="handlePollenAmountFileChange"
+        :on-change="handlePollenAmountFileUpload"
         :before-upload="beforePollenAmountUpload"
         :show-file-list="false"
       >
@@ -72,12 +73,14 @@
         v-show="pollen_amount_success"
         type="primary"
         class="algorithm_choosing"
+        @click="navigateTo('Ga')"
         >遗传算法</el-button
       >
       <el-button
         v-show="pollen_amount_success"
         type="primary"
         class="algorithm_choosing"
+        @click="navigateTo('Pso')"
         >粒子群算法</el-button
       >
     </div>
@@ -88,6 +91,7 @@
 import { onBeforeUnmount, ref } from "vue";
 import { ElMessage, UploadFile } from "element-plus";
 import axios from "axios";
+import { useRouter, onBeforeRouteLeave } from "vue-router";
 // 跟踪遗传距离文件、尺寸数据、花粉量文件上传状态
 const status = {
   file: false,
@@ -101,17 +105,17 @@ let pollen_amount_success = ref(false);
 
 // 种子园的横向及纵向树木数
 const width = ref<number | null>(null);
-const height = ref<number | null>(null);
+const length = ref<number | null>(null);
 
 // 控制handleSsrFileChange执行一次
-let isHandleSsrFileChange = ref(false);
+let isHandleSsrFileUpload = ref(false);
 
 // ssr文件验证正确并上传之后输出文件名字
-const handleSsrFileChange = async (uploadFile: any) => {
-  if (isHandleSsrFileChange.value) return;
-  isHandleSsrFileChange.value = true;
+const handleSsrFileUpload = async (uploadFile: any) => {
+  if (isHandleSsrFileUpload.value) return;
+  isHandleSsrFileUpload.value = true;
 
-  const file = uploadFile.raw; // 直接获取 File 对象
+  const file = uploadFile.raw;
   if (file) {
     console.log("文件名字是：", file.name);
 
@@ -119,35 +123,45 @@ const handleSsrFileChange = async (uploadFile: any) => {
     formData.append("file", file);
 
     try {
-      const response = await axios.post("/api/ssr_file_parse", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
+      const response = await fetch("/api/ssr_file_parse", {
+        method: "POST",
+        body: formData
       });
-      ElMessage.success("遗传距离文件上传成功");
-      status.file = true;
-      checkUpload();
-      console.log(response.data);
+
+      const result = await response.json(); // 解析 JSON 响应
+
+      if (response.ok) {
+        status.file = true;
+        if (status.dimension) {
+          await checkUpload();
+        }
+        ElMessage.success(result.message); // 显示成功信息
+      } else {
+        ElMessage.error(result.message); // 显示错误信息
+      }
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      ElMessage.error("请求失败，请重试。"); // 处理请求错误
     } finally {
-      isHandleSsrFileChange.value = false;
+      isHandleSsrFileUpload.value = false; // 在最终处理后重置状态
     }
   } else {
-    isHandleSsrFileChange.value = false;
+    isHandleSsrFileUpload.value = false;
   }
 };
 
 // 在这里添加ssr文件格式验证
 const beforeSsrUpload = (file: File) => {
-  if (isHandleSsrFileChange.value) {
-    // ElMessage.warning("文件上传正在进行中，请稍等");
-    return false; // 阻止上传
+  // 若是正在上传就阻止其再次上传
+  if (isHandleSsrFileUpload.value) {
+    ElMessage.warning("文件正在上传中，请稍等");
+    return false;
   }
   const isSSR = file.name.endsWith(".xlsx") || file.name.endsWith(".csv");
   if (!isSSR) {
-    ElMessage.error("上传文件格式不正确，请选择SSR文件");
+    ElMessage.error("上传文件格式不正确，请选择xlsx或csv格式文件");
   }
+
   return isSSR;
 };
 
@@ -155,21 +169,24 @@ const beforeSsrUpload = (file: File) => {
 const confirmSize = async () => {
   const data = {
     width: width.value,
-    height: height.value
+    length: length.value,
+    sum: width.value * length.value
   };
-  if (width.value && height.value) {
+  if (data.width && data.length) {
     // 弹窗提示成功
     ElMessage.success(
-      `您输入的尺寸是: 宽度 ${width.value}, 高度 ${height.value}`
+      `您输入的尺寸是：横向${data.width}棵树，纵向${data.length}棵树，共${data.sum}棵树`
     );
-    console.log(data);
+    console.log("data是", data);
     try {
       // 将数据传给后端
       const response = await axios.post("/api/dimension_parse", data);
       // 将尺寸的状态修改
       status.dimension = true;
       // 执行函数判断遗传距离文件以及尺寸数据能否对上
-      checkUpload();
+      if (status.file) {
+        await checkUpload();
+      }
       // 在控制台输出后端返回的信息
       console.log(response.data);
       //   抓取错误信息
@@ -178,33 +195,31 @@ const confirmSize = async () => {
     }
   } else {
     // 弹窗提示问题
-    ElMessage.warning("请填写完整的宽度和高度");
+    ElMessage.warning("请正确填写横纵向树木数");
   }
 };
 
 // 完成上传遗传距离文件以及尺寸数据之后进行判断
 const checkUpload = async () => {
-  if (status.file && status.dimension) {
-    try {
-      const response = await axios.get("/api/data_judge");
-      if (response.data.result === true) {
-        console.log("Data is valid:", response.data);
-        ssr_data_success.value = false;
-      } else {
-        console.log("Data is not valid:", response.data);
-      }
-    } catch (error) {
-      console.error("Error while checking data:", error);
-      ssr_data_success.value = false; // 请求失败时，设置为 false
+  try {
+    const response = await axios.get("/api/data_judge");
+    if (response.data.result === true) {
+      console.log("遗传距离及尺寸数据上传成功！");
+      ssr_data_success.value = false;
+    } else {
+      console.log("未完成遗传距离及尺寸数据上传，错误为：", response.data);
     }
+  } catch (error) {
+    console.error("上传错误如下", error);
+    ssr_data_success.value = false; // 请求失败时，设置为 false
   }
 };
 
-// 控制handlePollenAmountFileChange执行一次
-let isHandlePollenAmountFileChange = ref(false);
+// 控制handlePollenAmountFileUpload执行一次
+let isHandlePollenAmountFileUpload = ref(false);
 // 上传花粉量文件之前的验证
 const beforePollenAmountUpload = (file: File) => {
-  if (isHandlePollenAmountFileChange.value) {
+  if (isHandlePollenAmountFileUpload.value) {
     // 文件上传时阻止相同数据再次上传
     return false;
   }
@@ -217,9 +232,9 @@ const beforePollenAmountUpload = (file: File) => {
 };
 
 // 花粉量文件验证之后
-const handlePollenAmountFileChange = async (uploadFile: any) => {
-  if (isHandlePollenAmountFileChange.value) return;
-  isHandlePollenAmountFileChange.value = true;
+const handlePollenAmountFileUpload = async (uploadFile: any) => {
+  if (isHandlePollenAmountFileUpload.value) return;
+  isHandlePollenAmountFileUpload.value = true;
 
   const file = uploadFile.raw;
   if (file) {
@@ -247,11 +262,20 @@ const handlePollenAmountFileChange = async (uploadFile: any) => {
     } catch (error) {
       console.log(error);
     } finally {
-      isHandlePollenAmountFileChange.value = false;
+      isHandlePollenAmountFileUpload.value = false;
     }
   } else {
-    isHandlePollenAmountFileChange.value = false;
+    isHandlePollenAmountFileUpload.value = false;
   }
+};
+
+// 路由实例
+const router = useRouter();
+let isNavigateTo = ref(false);
+// 创建跳转路由实例
+const navigateTo = (routeName: string) => {
+  isNavigateTo.value = true;
+  router.push({ name: routeName });
 };
 
 onBeforeUnmount(() => {
@@ -259,7 +283,7 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .notion {
   display: flex;
   gap: 16px;
@@ -283,6 +307,7 @@ onBeforeUnmount(() => {
   padding: 8px 15px;
 }
 
+// 尺寸输入框
 .size-input {
   width: 200px;
 }
@@ -296,23 +321,5 @@ onBeforeUnmount(() => {
 
 .algorithm_choosing {
   margin-left: 20px;
-}
-
-.transition-container {
-  position: relative; /* 确保子元素绝对定位相对于此 */
-  height: 100px; /* 根据内容调整高度 */
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s ease;
-}
-
-.fade-enter,
-.fade-leave-to {
-  position: absolute; /* 绝对定位以保持重叠 */
-  top: 0;
-  left: 0;
-  opacity: 0; /* 进入和离开时透明度为 0 */
 }
 </style>
