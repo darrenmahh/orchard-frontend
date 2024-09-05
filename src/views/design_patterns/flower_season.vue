@@ -184,8 +184,19 @@ const checkUpload = async () => {
   }
 };
 
-const beforeFlowerSeasonFileUpload = () => {
+// 控制花期上传只执行一次
+let isHandleFlowerSeasonFileUpload = ref(false);
+const beforeFlowerSeasonFileUpload = (file: File) => {
   console.log("beforeFlowerSeasonFileUpload");
+  if (isHandleFlowerSeasonFileUpload.value) {
+    return false;
+  }
+  const isFlowerSeason =
+    file.name.endsWith(".xlsx") || file.name.endsWith(".csv");
+  if (!isFlowerSeason) {
+    ElMessage.error("上传的花期数据不正确，请上传正确文件");
+  }
+  return isFlowerSeason;
 };
 
 const handleFlowerSeasonFileUpload = () => {
