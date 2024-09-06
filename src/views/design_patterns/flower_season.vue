@@ -66,14 +66,14 @@
         v-show="flower_season_ok"
         type="primary"
         class="algorithm_choosing"
-        @click="navigateTo('Ga')"
+        @click="navigateTo('Ga', 'flower_season')"
         >遗传算法</el-button
       >
       <el-button
         v-show="flower_season_ok"
         type="primary"
         class="algorithm_choosing"
-        @click="navigateTo('Pso')"
+        @click="navigateTo('Pso', 'pollen_amount')"
         >粒子群算法</el-button
       >
     </div>
@@ -201,8 +201,6 @@ const checkUpload = async () => {
   }
 };
 
-// 控制花期数据上传只执行一次
-let isHandleFlowerSeasonFileUpload = ref(false);
 const beforeFlowerSeasonFileUpload = (file: File) => {
   // 若是正在上传就阻止再次上传相同文件
   if (isHandleFlowerSeasonFileUpload.value) {
@@ -217,15 +215,50 @@ const beforeFlowerSeasonFileUpload = (file: File) => {
   return true;
 };
 
-const handleFlowerSeasonFileUpload = () => {
+// 使用标志位来控制函数执行次数
+let isHandleFlowerSeasonFileUpload = ref(false);
+
+const handleFlowerSeasonFileUpload = async (uploadFile: any) => {
   console.log("handleFlowerSeasonFileChange");
+  if (isHandleFlowerSeasonFileUpload.value) return;
+  isHandleFlowerSeasonFileUpload.value = true;
+
+  const file = uploadFile.raw;
+  console.log("file", file);
+  if (file) {
+    console.log("文件名字是：", file.name);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios.post(
+        "/api/flower_season_file_parse",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        }
+      );
+      // 上传之后将上传成功的标志置true
+      flower_season_ok.value = true;
+      ElMessage.success("上传花期文件成功！");
+    } catch (error) {
+      console.log(error);
+    }
+  } else {
+    isHandleFlowerSeasonFileUpload.value = false;
+  }
 };
 
+// 创建路由实例
 const router = useRouter();
 let isNavigateTo = ref(false);
-const navigateTo = (routeName: string) => {
+const navigateTo = (routeName: string, design_pattern: string) => {
   isNavigateTo.value = true;
-  router.push({ name: routeName });
+  router.push({ name: routeName, query: { type: design_pattern } });
+  console.log("design_pattern", design_pattern);
 };
 </script>
 

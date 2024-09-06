@@ -59,7 +59,7 @@
       <el-upload
         class="pollen_amount_file_upload"
         action="/api/pollen_amount_file_parse"
-        :on-sucess="handlePollenAmountFileUpload"
+        :on-change="handlePollenAmountFileUpload"
         :before-upload="beforePollenAmountUpload"
         :show-file-list="false"
       >
@@ -74,14 +74,14 @@
         v-show="pollen_amount_success"
         type="primary"
         class="algorithm_choosing"
-        @click="navigateTo('Ga')"
+        @click="navigateTo('Ga', 'pollen_amount')"
         >遗传算法</el-button
       >
       <el-button
         v-show="pollen_amount_success"
         type="primary"
         class="algorithm_choosing"
-        @click="navigateTo('Pso')"
+        @click="navigateTo('Pso', 'pollen_amount')"
         >粒子群算法</el-button
       >
     </div>
@@ -229,8 +229,9 @@ const beforePollenAmountUpload = (file: File) => {
     file.name.endsWith(".xlsx") || file.name.endsWith(".csv");
   if (!isPollenAmount) {
     ElMessage.error("上传的花粉量文件数据不正确，请上传正确文件");
+    return false;
   }
-  return isPollenAmount;
+  return true;
 };
 
 // 花粉量文件验证之后
@@ -259,7 +260,7 @@ const handlePollenAmountFileUpload = async (uploadFile: any) => {
       );
       // 上传之后将上传成功的标志置true
       pollen_amount_success.value = true;
-      ElMessage.success("上传花粉量文件成功");
+      ElMessage.success("上传花粉量文件成功！");
       console.log(response.data);
     } catch (error) {
       console.log(error);
@@ -275,9 +276,9 @@ const handlePollenAmountFileUpload = async (uploadFile: any) => {
 const router = useRouter();
 let isNavigateTo = ref(false);
 // 创建跳转路由实例
-const navigateTo = (routeName: string) => {
+const navigateTo = (routeName: string, design_pattern: string) => {
   isNavigateTo.value = true;
-  router.push({ name: routeName });
+  router.push({ name: routeName, query: { type: design_pattern } });
 };
 
 onBeforeUnmount(() => {
