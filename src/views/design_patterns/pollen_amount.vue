@@ -90,7 +90,7 @@
 
 <script lang="ts" name="Pollen_amount" setup>
 import { onBeforeUnmount, ref } from "vue";
-import { ElMessage, UploadFile } from "element-plus";
+import { ElMessage } from "element-plus";
 import axios from "axios";
 import { useNavigation } from "@/composables/useNavigation";
 // 跟踪遗传距离文件、尺寸数据、花粉量文件上传状态
