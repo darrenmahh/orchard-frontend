@@ -92,7 +92,7 @@
 import { onBeforeUnmount, ref } from "vue";
 import { ElMessage, UploadFile } from "element-plus";
 import axios from "axios";
-import { useRouter, onBeforeRouteLeave } from "vue-router";
+import { useNavigation } from "@/composables/useNavigation";
 // 跟踪遗传距离文件、尺寸数据、花粉量文件上传状态
 const status = {
   file: false,
@@ -272,17 +272,27 @@ const handlePollenAmountFileUpload = async (uploadFile: any) => {
   }
 };
 
-// 路由实例
-const router = useRouter();
-let isNavigateTo = ref(false);
-// 创建跳转路由实例
-const navigateTo = (routeName: string, design_pattern: string) => {
-  isNavigateTo.value = true;
-  router.push({ name: routeName, query: { type: design_pattern } });
-};
+// // 路由实例
+// const router = useRouter();
+// let isNavigateTo = ref(false);
+// // 创建跳转路由实例
+// const navigateTo = (routeName: string, design_pattern: string) => {
+//   isNavigateTo.value = true;
+//   router.push({ name: routeName, query: { type: design_pattern } });
+// };
 
-onBeforeUnmount(() => {
-  alert("退出此界面数据将全部丢失");
+const { isNavigateTo, navigateTo } = useNavigation();
+
+// 如果跳转界面是用户点击的，那么不会弹出提示或者清空数据
+onBeforeUnmount(async () => {
+  if (!isNavigateTo.value) {
+    try {
+      await axios.post("/api/reset_algorithms_data");
+      alert("退出此界面数据将全部丢失");
+    } catch (e) {
+      console.error("未能重置算法数据", e);
+    }
+  }
 });
 </script>
 
