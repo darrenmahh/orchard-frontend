@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>Pure-Admin-Thin（非国际化版本）</h1>
+    <h1>种子园无性系配置优化系统</h1>
     <!-- 使用 v-if 判断 loginData 是否存在 -->
     <!--    <p v-if="loginData">登录成功！数据：{{ loginData.message }}</p>-->
     <!--    <p v-else>正在加载...</p>-->

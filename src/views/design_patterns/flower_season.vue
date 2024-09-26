@@ -81,10 +81,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { onBeforeUnmount, ref } from "vue";
 import { ElMessage } from "element-plus";
 import axios from "axios";
-import { useRouter } from "vue-router";
 
 // 跟踪文件以及尺寸上传状态
 const status = {
@@ -99,6 +98,7 @@ const length = ref<number | null>(null);
 let ssr_data_ok = ref(true);
 // 判断花粉量文件上传是否成功
 let flower_season_ok = ref(false);
+let isHandleSsrFileUpload = ref(false);
 
 // 上传文件之前的验证
 const beforeSsrUpload = (file: File) => {
@@ -116,7 +116,7 @@ const beforeSsrUpload = (file: File) => {
 };
 
 // 控制上传相同文件时只执行一次函数
-let isHandleSsrFileUpload = ref(false);
+
 const handleSsrFileUpload = async (uploadFile: any) => {
   console.log("调用handleSsrFileUpload");
   if (isHandleSsrFileUpload.value) return;
@@ -253,13 +253,40 @@ const handleFlowerSeasonFileUpload = async (uploadFile: any) => {
 };
 
 // 创建路由实例
+// const router = useRouter();
+// let isNavigateTo = ref(false);
+// const navigateTo = (routeName: string, design_pattern: string) => {
+//   isNavigateTo.value = true;
+//   router.push({ name: routeName, query: { type: design_pattern } });
+//   console.log("design_pattern", design_pattern);
+// };
+
+import { useNavigation } from "@/composables/useNavigation";
+import { useRouter } from "vue-router";
+const { isNavigateTo, navigateTo } = useNavigation();
+
 const router = useRouter();
-let isNavigateTo = ref(false);
-const navigateTo = (routeName: string, design_pattern: string) => {
-  isNavigateTo.value = true;
-  router.push({ name: routeName, query: { type: design_pattern } });
-  console.log("design_pattern", design_pattern);
-};
+// 只有用户点击算法选择按钮时才会跳转
+router.beforeEach((to, from, next) => {
+  if (!isNavigateTo.value && (status.file || status.dimension)) {
+    const userConfirmed = confirm("退出此界面数据将全部丢失。是否继续？");
+    if (userConfirmed) {
+      axios
+        .post("/api/reset_algorithms_data")
+        .then(() => {
+          next();
+        })
+        .catch(error => {
+          console.error("未能重置算法数据", error);
+          next(false);
+        });
+    } else {
+      next(false);
+    }
+  } else {
+    next();
+  }
+});
 </script>
 
 <style scoped lang="scss">

@@ -13,9 +13,11 @@
 import axios from "axios";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
+import router from "@/router";
 
 const route = useRoute();
 let designPattern = ref<string>("");
+
 // 页面装载的时候获取算法类型
 onMounted(() => {
   const queryType = route.query.type;
@@ -26,6 +28,10 @@ onMounted(() => {
   }
   console.log("设计模式是：", designPattern.value);
 });
+
+import { useNavigation } from "@/composables/useNavigation";
+const { navigateTo } = useNavigation();
+
 const ga_main = async () => {
   if (designPattern.value === "pollen_amount") {
     console.log("执行花粉量设计模式遗传算法！");
@@ -37,6 +43,10 @@ const ga_main = async () => {
     console.log("执行完花期设计模式遗传算法之后的response", response);
   } else {
     console.log("designPattern为空！");
+    alert("请前往选择设计模式输入算法数据");
+    if (confirm("是否跳转到设计模式选择页面?")) {
+      navigateTo("Design_patterns", "");
+    }
   }
 };
 </script>

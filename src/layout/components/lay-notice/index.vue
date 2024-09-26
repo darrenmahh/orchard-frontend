@@ -18,20 +18,20 @@ const getLabel = computed(
 
 <template>
   <el-dropdown trigger="click" placement="bottom-end">
-    <span
-      :class="[
-        'dropdown-badge',
-        'navbar-bg-hover',
-        'select-none',
-        Number(noticesNum) !== 0 && 'mr-[10px]'
-      ]"
-    >
-      <el-badge :value="Number(noticesNum) === 0 ? '' : noticesNum" :max="99">
-        <span class="header-notice-icon">
-          <IconifyIconOffline :icon="BellIcon" />
-        </span>
-      </el-badge>
-    </span>
+    <!--    <span-->
+    <!--      :class="[-->
+    <!--        'dropdown-badge',-->
+    <!--        'navbar-bg-hover',-->
+    <!--        'select-none',-->
+    <!--        Number(noticesNum) !== 0 && 'mr-[10px]'-->
+    <!--      ]"-->
+    <!--    >-->
+    <!--      &lt;!&ndash;      <el-badge :value="Number(noticesNum) === 0 ? '' : noticesNum" :max="99">&ndash;&gt;-->
+    <!--      &lt;!&ndash;        <span class="header-notice-icon">&ndash;&gt;-->
+    <!--      &lt;!&ndash;          <IconifyIconOffline :icon="BellIcon" />&ndash;&gt;-->
+    <!--      &lt;!&ndash;        </span>&ndash;&gt;-->
+    <!--      &lt;!&ndash;      </el-badge>&ndash;&gt;-->
+    <!--    </span>-->
     <template #dropdown>
       <el-dropdown-menu>
         <el-tabs

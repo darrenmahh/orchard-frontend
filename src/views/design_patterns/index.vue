@@ -1,5 +1,5 @@
 <template>
-  <h2>设计模式首页</h2>
+  <h2>请选择您的设计模式</h2>
 </template>
 
 <script setup lang="ts" name="Design_pattern">

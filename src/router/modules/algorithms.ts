@@ -2,6 +2,7 @@
 export default {
   path: "/algorithms",
   meta: {
+    icon: "icon-park-solid:arithmetic-buttons",
     title: "优化算法",
     rank: 2
   },
@@ -11,7 +12,8 @@ export default {
       name: "Algorithms",
       component: () => import("@/views/algorithms/index.vue"),
       meta: {
-        title: "首页"
+        title: "首页",
+        showLink: false
       }
     },
     {
@@ -19,6 +21,7 @@ export default {
       name: "Ga",
       component: () => import("@/views/algorithms/ga.vue"),
       meta: {
+        icon: "material-symbols-light:genetics-rounded",
         title: "遗传算法"
       }
     },
@@ -27,6 +30,7 @@ export default {
       name: "Pso",
       component: () => import("@/views/algorithms/pso.vue"),
       meta: {
+        icon: "hugeicons:swarm",
         title: "粒子群算法"
       }
     }
