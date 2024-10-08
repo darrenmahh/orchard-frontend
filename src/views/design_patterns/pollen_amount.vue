@@ -88,7 +88,7 @@
   </div>
 </template>
 
-<script lang="ts" name="Pollen_amount" setup>
+<script lang="ts" setup>
 import { onBeforeUnmount, ref } from "vue";
 import { ElMessage } from "element-plus";
 import axios from "axios";
