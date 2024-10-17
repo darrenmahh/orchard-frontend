@@ -73,7 +73,7 @@
         v-show="flower_season_ok"
         type="primary"
         class="algorithm_choosing"
-        @click="navigateTo('Pso', 'pollen_amount')"
+        @click="navigateTo('Pso', 'flower_season')"
         >粒子群算法</el-button
       >
     </div>

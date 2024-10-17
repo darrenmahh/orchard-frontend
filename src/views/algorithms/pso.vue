@@ -1,7 +1,9 @@
 <template>
   <div class="Pso-container">
     <div class="suggestion">
-      <el-text class="text" type="primary" size="large">粒子群算法 </el-text>
+      <el-text class="text" type="primary" size="large"
+        >输入最大迭代次数</el-text
+      >
     </div>
     <div class="algorithm">
       <div class="pso_calculate">
@@ -20,6 +22,12 @@
         </div>
         <el-button type="primary" @click="pso_main">计算</el-button>
       </div>
+      <!--      <div class="data_test">-->
+      <!--        <el-button type="primary" @click="test">测试</el-button>-->
+      <!--        <el-text v-for="(value, key) in data_test" :key="key">-->
+      <!--          {{ key }}: {{ value }}-->
+      <!--        </el-text>-->
+      <!--      </div>-->
     </div>
   </div>
 </template>
@@ -35,6 +43,7 @@ let designPattern = ref("");
 onMounted(() => {
   nextTick(() => {
     console.log("页面渲染完成，开始执行算法");
+    console.log("路由查询参数", route.query);
     const queryType = route.query.type;
     if (typeof queryType === "string") {
       designPattern.value = queryType;
@@ -63,15 +72,34 @@ const confirmMaxIteration = async () => {
 // 向后端传递最大迭代次数
 const max_iteration = ref(10);
 
+// 算法所得数据
+const algorithmsData = ref({});
+
 const pso_main = async () => {
-  try {
-    console.log("执行粒子群算法！");
+  if (
+    designPattern.value === "pollen_amount" ||
+    designPattern.value === "entire_pattern"
+  ) {
     const response = await axios.post("/api/Pso_pollen_amount");
-    console.log("执行完粒子群算法之后的response", response);
-  } catch (error) {
-    console.error("执行粒子群算法时出错", error);
+    // algorithmsData.value = response.data;
+
+    console.log("执行完花粉量设计模式粒子群算法", response.data);
+  } else if (designPattern.value === "flower_season") {
+    const response = await axios.post("/api/Pso_flower_season");
+    algorithmsData.value = response.data;
+
+    console.log("执行完花期设计模式粒子群算法", response.data);
+  } else {
+    console.log("设计模式错误");
   }
 };
+
+// let data_test = ref();
+// const test = async () => {
+//   const response = await axios.get("/api/test_data");
+//   data_test.value = response.data;
+//   console.log("测试数据", response.data);
+// };
 </script>
 
 <style scoped lang="scss">
