@@ -97,8 +97,7 @@ export function resetRouter() {
       );
     }
   });
-  usePermissionStoreHook().clearAllCachePage();
-}
+} // 去除登录逻辑后的路由守卫 router.beforeEach((to: ToRouteType, _from, next) => { NProgress.start(); const externalLink = isUrl(to?.name as string); // 设置页面标题 if (!externalLink) { to.matched.some(item => { if (!item.meta.title) return ""; const Title = getConfig().Title; if (Title) document.title = `${item.meta.title} | ${Title}`; else document.title = item.meta.title as string; }); } // 无需登录，直接允许跳转 next(); }); // 路由切换结束，关闭进度条 router.afterEach(() => { NProgress.done(); }); export default router;
 
 /** 路由白名单 */
 const whiteList = ["/login"];

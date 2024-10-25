@@ -5,29 +5,27 @@
         >输入最大迭代次数</el-text
       >
     </div>
-    <div class="algorithm">
-      <div class="pso_calculate">
-        <div class="termination-condition">
-          <el-input-number
-            v-model="max_iteration"
-            placeholder="最大迭代次数"
-            label="最大迭代次数"
-            class="max_iteration"
-            :min="10"
-            :step="10"
-          />
-          <el-button type="primary" @click="confirmMaxIteration"
-            >确认</el-button
-          >
-        </div>
+
+    <div class="pso_calculate">
+      <div class="termination-condition">
+        <el-input-number
+          v-model="max_iteration"
+          placeholder="最大迭代次数"
+          label="最大迭代次数"
+          class="max_iteration"
+          :min="10"
+          :step="10"
+        />
+        <el-button type="primary" @click="confirmMaxIteration">确认</el-button>
         <el-button type="primary" @click="pso_main">计算</el-button>
+        <el-button type="primary" @click="pso_test">测试</el-button>
       </div>
-      <!--      <div class="data_test">-->
-      <!--        <el-button type="primary" @click="test">测试</el-button>-->
-      <!--        <el-text v-for="(value, key) in data_test" :key="key">-->
-      <!--          {{ key }}: {{ value }}-->
-      <!--        </el-text>-->
-      <!--      </div>-->
+    </div>
+    <div class="algorithm_show">
+      <div id="orchard" />
+    </div>
+    <div class="fitness_show">
+      <div id="fitness" style="width: 100%; height: 800px" />
     </div>
   </div>
 </template>
@@ -72,34 +70,55 @@ const confirmMaxIteration = async () => {
 // 向后端传递最大迭代次数
 const max_iteration = ref(10);
 
-// 算法所得数据
-const algorithmsData = ref({});
-
+// 让后台进行算法计算，并将数据返回
 const pso_main = async () => {
+  // 根据不同组件跳转执行不同的算法
   if (
     designPattern.value === "pollen_amount" ||
     designPattern.value === "entire_pattern"
   ) {
-    const response = await axios.post("/api/Pso_pollen_amount");
-    // algorithmsData.value = response.data;
-
-    console.log("执行完花粉量设计模式粒子群算法", response.data);
+    axios.post("/api/Pso_pollen_amount").then(response => {
+      // algorithm_show(response, "pso", "pollen_amount");
+    });
   } else if (designPattern.value === "flower_season") {
-    const response = await axios.post("/api/Pso_flower_season");
-    algorithmsData.value = response.data;
-
-    console.log("执行完花期设计模式粒子群算法", response.data);
+    axios.post("/api/Pso_flower_season").then(response => {
+      // algorithm_show(response, "pso", "flower_season");
+    });
   } else {
     console.log("设计模式错误");
   }
 };
 
-// let data_test = ref();
-// const test = async () => {
-//   const response = await axios.get("/api/test_data");
-//   data_test.value = response.data;
-//   console.log("测试数据", response.data);
-// };
+import { useShowOrchard } from "@/composables/useShowOrchard";
+import { useShowFitnessAlteration } from "@/composables/useShowFitnessAlteration";
+const { calculate_success, showOrchard } = useShowOrchard();
+const { showFitnessAlteration } = useShowFitnessAlteration();
+
+// 测试函数
+const pso_test = async () => {
+  axios.post("/api/Pso_test").then(async response => {
+    await nextTick();
+    console.log("测试数据", response.data);
+    calculate_success.value = true;
+    // 获得 orchard 元素
+    const orchardElement = document.getElementById("orchard");
+    const fitnessElement = document.getElementById("fitness");
+
+    if (orchardElement) {
+      orchardElement.style.width = `${response.data["length"] * 50}px`;
+      orchardElement.style.height = `${response.data["width"] * 50}px`;
+      showOrchard(orchardElement, response);
+    } else {
+      console.error("找不到 orchard 元素");
+    }
+
+    if (fitnessElement) {
+      showFitnessAlteration(fitnessElement, response);
+    } else {
+      console.error("找不到alteration元素");
+    }
+  });
+};
 </script>
 
 <style scoped lang="scss">
@@ -119,11 +138,12 @@ const pso_main = async () => {
   gap: 16px;
   align-items: center;
   width: 200px;
-  //margin: auto;
+  margin-right: 20px;
 }
 
 .pso_calculate {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   align-items: center;
 }
@@ -132,5 +152,10 @@ const pso_main = async () => {
   display: flex;
   gap: 16px;
   align-items: center;
+}
+
+.algorithm_show {
+  display: block;
+  margin-top: 30px;
 }
 </style>

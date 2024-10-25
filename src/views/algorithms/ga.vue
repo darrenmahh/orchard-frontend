@@ -23,8 +23,6 @@
         <el-button type="primary" @click="ga_main">计算</el-button>
       </div>
     </div>
-    <pre>{{ algorithmsData["best_fitness"] }}</pre>
-    <pre>{{ formattedAlgorithmsData }}</pre>
   </div>
 </template>
 
@@ -32,7 +30,6 @@
 import axios from "axios";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
-import { useFormattedData } from "@/composables/useFormattedData"; // 引入格式化数据的逻辑
 
 const route = useRoute();
 let designPattern = ref<string>("");
@@ -84,6 +81,7 @@ const ga_main = async () => {
   ) {
     // 执行花粉量设计模式遗传算法
     const response = await axios.post("/api/Ga_pollen_amount");
+    // 将后端返回的数据接收到algorithmsData
     algorithmsData.value = response.data;
     console.log(
       "执行完花粉量设计模式遗传算法之后的algorithmsData",
@@ -106,9 +104,6 @@ const ga_main = async () => {
     }
   }
 };
-
-// 使用 useFormattedData 来格式化 algorithmsData
-const formattedAlgorithmsData = useFormattedData(algorithmsData);
 </script>
 
 <style scoped lang="scss">
@@ -128,6 +123,7 @@ const formattedAlgorithmsData = useFormattedData(algorithmsData);
   gap: 16px;
   align-items: center;
   width: 200px;
+  margin-right: 20px;
 }
 
 .pso_calculate {
