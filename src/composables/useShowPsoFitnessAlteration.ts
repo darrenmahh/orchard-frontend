@@ -7,7 +7,6 @@ export function useShowFitnessAlteration() {
 
     const myChart = echarts.init(fitnessElement);
     const data = response.data["Fitness_alteration"];
-    console.log("data", data);
     const option = {
       title: {
         text: "适应度变化"
