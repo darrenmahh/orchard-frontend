@@ -3,7 +3,9 @@ export default {
   meta: {
     icon: "simple-icons:textpattern",
     title: "设计模式",
-    rank: 1
+    rank: 1,
+    // showLink: true,
+    alwaysShow: true
   },
   children: [
     {
@@ -12,7 +14,8 @@ export default {
       component: () => import("@/views/design_patterns/index.vue"),
       meta: {
         icon: "healthicons:i-exam-multiple-choice-outline",
-        title: "模式选择"
+        title: "模式选择",
+        alwaysShow: true
       }
     },
     {

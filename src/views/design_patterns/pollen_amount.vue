@@ -51,7 +51,7 @@
         class="size-input"
       />
 
-      <el-button type="primary" @click="confirmSize">确认尺寸</el-button>
+      <el-button type="primary" @click="confirmSize">行列配置</el-button>
     </div>
 
     <!--花粉量文件上传-->
@@ -89,7 +89,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onBeforeUnmount, ref } from "vue";
+import { ref } from "vue";
 import { ElMessage } from "element-plus";
 import axios from "axios";
 
@@ -254,7 +254,7 @@ const handlePollenAmountFileUpload = async (uploadFile: any) => {
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data"
+            // "Content-Type": "multipart/form-data"
           }
         }
       );

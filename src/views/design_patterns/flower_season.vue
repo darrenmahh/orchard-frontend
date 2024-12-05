@@ -44,7 +44,7 @@
         class="size-input"
         :min="1"
       />
-      <el-button type="primary" @click="confirmSize">确认尺寸</el-button>
+      <el-button type="primary" @click="confirmSize">行列配置</el-button>
     </div>
 
     <div class="flower_season_upload">
@@ -251,15 +251,6 @@ const handleFlowerSeasonFileUpload = async (uploadFile: any) => {
     isHandleFlowerSeasonFileUpload.value = false;
   }
 };
-
-// 创建路由实例
-// const router = useRouter();
-// let isNavigateTo = ref(false);
-// const navigateTo = (routeName: string, design_pattern: string) => {
-//   isNavigateTo.value = true;
-//   router.push({ name: routeName, query: { type: design_pattern } });
-//   console.log("design_pattern", design_pattern);
-// };
 
 import { useNavigation } from "@/composables/useNavigation";
 import { useRouter } from "vue-router";

@@ -4,7 +4,8 @@ export default {
   meta: {
     icon: "icon-park-solid:arithmetic-buttons",
     title: "优化算法",
-    rank: 2
+    rank: 2,
+    alwaysShow: true
   },
   children: [
     {

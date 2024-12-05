@@ -56,6 +56,8 @@ declare global {
      * 而通过设置`activePath`指定激活菜单即可获得高亮，`activePath`为指定激活菜单的`path`）
      */
     activePath?: string;
+    /** 是否总是显示菜单 `可选` */
+    alwaysShow?: boolean; // 添加这一行
   }
 
   /**
@@ -96,6 +98,8 @@ declare global {
       showLink?: boolean;
       /** 菜单升序排序，值越高排的越后（只针对顶级路由）`可选` */
       rank?: number;
+      /** 是否总是显示菜单 `可选` */
+      alwaysShow?: boolean; // 添加这一行
     };
     /** 子路由配置项 */
     children?: Array<RouteChildrenConfigsTable>;

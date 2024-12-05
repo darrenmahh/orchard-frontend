@@ -1,79 +1,111 @@
 import echarts from "@/plugins/echarts";
 import { max, min } from "@pureadmin/utils";
+import { useShowOrchard } from "./useShowOrchard";
 
-export function useShowRatioAlteration() {
-  function showRatioAlteration(fitnessElement: any, response: any) {
-    console.log("在适应度柱状图上添加比率变化折线图");
+// Ga结果展示，包括适应度、变异率、交叉率，柱状图和折线图
+export function useShowGaFitnessAndRatioAlteration() {
+  function showGaFitnessAndRatioAlteration(
+    alterationElement: any,
+    response: any,
+    orchardElement: any,
+    design_pattern: any
+  ) {
+    console.log("Ga结果展示，包括适应度、变异率、交叉率，柱状图和折线图");
 
-    // 获取现有图表实例
-    let myChart = echarts.getInstanceByDom(fitnessElement);
-    if (!myChart) {
-      myChart = echarts.init(fitnessElement);
-    }
+    const myChart = echarts.init(alterationElement);
 
-    // 折线图数据
+    const fitnessData = response.data["Fitness_alteration"];
     const mutationRatioData = response.data["Mutation_ratio_alteration"];
     const crossoverRatioData = response.data["Crossover_ratio_alteration"];
 
-    // 获取现有的 option
-    let option = (myChart.getOption() as echarts.EChartsCoreOption) || {};
+    // 获取 fitnessData 的最大值和最小值
+    const fitnessMax = Math.ceil(max(fitnessData));
+    const fitnessMin = Math.floor(min(fitnessData));
 
-    // 如果 option 不存在，初始化 option 配置（仅用于首次加载）
-    if (!option) {
-      const fitnessData = response.data["Fitness_alteration"];
-      option = {
-        title: { text: "适应度变化和比率变化" },
-        tooltip: { trigger: "axis", axisPointer: { type: "cross" } },
-        legend: { data: ["适应度", "突变率", "交叉率"] },
-        xAxis: {
-          type: "category",
-          data: fitnessData.map((_, index) => `Generation ${index + 1}`),
-          axisLabel: { interval: 0, rotate: 45 }
-        },
-        yAxis: [
-          {
-            type: "value",
-            name: "适应度",
-            min: min(fitnessData),
-            max: max(fitnessData)
-          },
-          { type: "value", name: "比率", min: 0, max: 1, position: "right" }
-        ],
-        series: [
-          {
-            name: "适应度",
-            type: "bar",
-            data: fitnessData,
-            itemStyle: { color: "#0e3995" }
-          }
-        ]
-      };
-    }
-
-    // 追加折线图系列到现有的 series 中
-    option.series = [
-      ...(Array.isArray(option.series) ? option.series : []), // 强制 option.series 为数组
-      {
-        name: "突变率",
-        type: "line",
-        yAxisIndex: 1, // 使用右侧Y轴
-        data: mutationRatioData,
-        itemStyle: { color: "#ff7f50" }
+    // 配置图表选项
+    const option = {
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "cross" }
       },
-      {
-        name: "交叉率",
-        type: "line",
-        yAxisIndex: 1, // 使用右侧Y轴
-        data: crossoverRatioData,
-        itemStyle: { color: "#87cefa" }
-      }
-    ];
+      xAxis: {
+        type: "category",
+        data: Array.from({ length: fitnessData.length }, (_, i) => i + 1),
+        name: "Generation",
+        nameGap: 30
+      },
+      yAxis: [
+        {
+          type: "value",
+          name: "Fitness",
+          min: fitnessMin,
+          max: fitnessMax,
+          position: "left"
+        },
+        {
+          type: "value",
+          name: "Ratio",
+          min: 0,
+          max: 1,
+          position: "right",
+          axisLabel: {
+            padding: [0, 0, 10, 0]
+          }
+        }
+      ],
+      series: [
+        {
+          name: "Fitness",
+          type: "bar", // 修改为柱状图
+          data: fitnessData,
+          yAxisIndex: 0,
+          itemStyle: {
+            color: "#5470C6"
+          }
+        },
+        {
+          name: "Mutation Ratio",
+          type: "line",
+          data: mutationRatioData,
+          yAxisIndex: 1,
+          smooth: true,
+          lineStyle: {
+            color: "#91CC75"
+          }
+        },
+        {
+          name: "Crossover Ratio",
+          type: "line",
+          data: crossoverRatioData,
+          yAxisIndex: 1,
+          smooth: true,
+          lineStyle: {
+            color: "#EE6666"
+          }
+        }
+      ]
+    };
 
-    // 更新图表，不覆盖已有柱状图
-    myChart.setOption(option, { notMerge: true });
+    // 设置图表选项并渲染
+    myChart.setOption(option);
+
+    // 监听点击事件
+    myChart.on("click", function (params) {
+      // console.log(
+      //   "点击的代的种子园",
+      //   response.data["orchard_alteration"][params.dataIndex]
+      // );
+      // console.log(
+      //   "点击的代的适应度",
+      //   response.data["Fitness_alteration"][params.dataIndex]
+      // );
+
+      const { showOrchard } = useShowOrchard();
+      showOrchard(orchardElement, response, design_pattern, params.dataIndex);
+    });
   }
 
   return {
-    showRatioAlteration
+    showGaFitnessAndRatioAlteration
   };
 }
